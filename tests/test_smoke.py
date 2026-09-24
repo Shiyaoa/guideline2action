@@ -1,7 +1,7 @@
 """Smoke suite for the projection layer and the deterministic interpreter.
 
-Runs entirely offline: the graph is built from a stored extraction payload
-(``examples/synthetic_extraction_sglt2i.json``), never from an LLM call.
+Runs entirely offline: graphs are built from in-memory extraction payloads
+(:mod:`tests.fixtures`), never from an LLM call.  No data files are needed.
 
     python3 tests/test_smoke.py
 """
@@ -23,11 +23,7 @@ from guideline2action import (  # noqa: E402
     run_graph,
     runtime_program,
 )
-
-FIXTURE = ROOT / "examples" / "synthetic_extraction_sglt2i.json"
-#: Real payload from a live ``compile_guideline`` run (LLM extraction of one
-#: Chinese HFrEF recommendation).  Carries no patient data and no answers.
-LIVE_FIXTURE = ROOT / "examples" / "live_extraction_sglt2i_hfref.json"
+from tests.fixtures import LIVE_EXTRACTION, SYNTHETIC_EXTRACTION  # noqa: E402
 
 HFREF_FACT = {
     "fact_id": "obs.1",
@@ -66,7 +62,7 @@ def assessment(value: str) -> list[dict]:
 
 
 def load_graph() -> ExecutableGraph:
-    return ExecutableGraph.from_extraction(json.loads(FIXTURE.read_text(encoding="utf-8")))
+    return ExecutableGraph.from_extraction(SYNTHETIC_EXTRACTION)
 
 
 def rule_truth(trace: dict, rule_id: str) -> str:
@@ -296,7 +292,7 @@ class RealExtractionTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.graph = ExecutableGraph.from_extraction(
-            json.loads(LIVE_FIXTURE.read_text(encoding="utf-8")), graph_id="live_sglt2i_hfref"
+            LIVE_EXTRACTION, graph_id="live_sglt2i_hfref"
         )
 
     def test_enum_fields_are_unwrapped(self) -> None:

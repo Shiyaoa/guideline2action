@@ -80,16 +80,16 @@ result = run_graph(graph, observations=[
 ```bash
 pip install -e .
 
-# 离线自检：29 个用例，不需要 API key
+# 离线自检：32 个用例，不需要 API key、不需要任何数据文件
 python3 tests/test_smoke.py
 ```
 
-`examples/` 下两份抽取产物供离线自检：
+自检用的两份抽取产物**内联在 `tests/fixtures.py`** 里，仓库不携带数据文件：
 
-| 文件 | 来源 | 覆盖边界 |
+| 夹具 | 来源 | 覆盖边界 |
 |---|---|---|
-| `synthetic_extraction_sglt2i.json` | 手写合成 | 可计算阈值、`treatment_eligibility` 型评估、自定义比较符 `within_normal_range`、值类型（`Enum`）谓词直接当规则根 |
-| `live_extraction_sglt2i_hfref.json` | **真实** LLM 抽取（一条中文 HFrEF 推荐意见，66.7s） | str-enum 序列化、单谓词单规则的真实形态 |
+| `SYNTHETIC_EXTRACTION` | 手写合成 | 可计算阈值、`treatment_eligibility` 型评估、自定义比较符 `within_normal_range`、值类型（`Enum`）谓词直接当规则根 |
+| `LIVE_EXTRACTION` | **真实** LLM 抽取（一条中文 HFrEF 推荐意见，66.7 s） | `Permission` 以 str-enum 形态到达、事实概念仅由 `retrieve.code_binding` 指出的真实形态 |
 
 两者都不含患者资料、不含答案或 Oracle。
 
@@ -163,6 +163,11 @@ guideline2action/
 ├── projection.py  投影层（抽取产物 → 可执行 Schema-v2 图）
 ├── runtime/       解释器 + 临床交接渲染
 └── __init__.py    compile_guideline / run_graph
-examples/          合成抽取产物（离线自检用）
-tests/             29 个离线用例
+tests/
+├── fixtures.py    两份内联抽取产物（合成 + 真实）
+└── test_smoke.py  32 个离线用例
 ```
+
+## 许可
+
+Apache License 2.0 —— 见 [`LICENSE`](LICENSE)。
