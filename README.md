@@ -1,5 +1,7 @@
 # Guideline2Action
 
+[English](README.en.md) · **中文**
+
 把**临床指南文本**编译成**可执行决策图**，并确定性地在患者资料上执行它。
 
 ```python
@@ -158,6 +160,8 @@ LLM_MODEL=...
 ## 目录
 
 ```text
+README.md          中文说明（本文件）
+README.en.md       English description
 guideline2action/
 ├── graph/         抽取层（指南文本 → terms/predicates/rules）
 ├── projection.py  投影层（抽取产物 → 可执行 Schema-v2 图）
