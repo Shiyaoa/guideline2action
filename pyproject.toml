@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "guideline2action"
+version = "0.1.0"
+description = "Compile clinical guideline text into an executable decision graph and run it deterministically"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.6",
+    "langgraph>=0.2",
+    "langchain-core>=0.3",
+    "openai>=1.30",
+]
+
+[project.optional-dependencies]
+tracing = ["langfuse>=2.0"]
+
+[tool.setuptools]
+packages = ["guideline2action", "guideline2action.graph", "guideline2action.runtime"]

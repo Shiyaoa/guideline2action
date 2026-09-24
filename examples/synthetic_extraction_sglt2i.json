@@ -1,0 +1,285 @@
+{
+  "guideline_id": "sglt2i_hfref_synthetic_v1",
+  "metadata": {
+    "note": "Synthetic extraction payload used for smoke tests; mirrors the shape returned by ClinicalGuidelinePipeline.run()."
+  },
+  "terms": [
+    {
+      "id": "cond.hfref",
+      "name": "Heart failure with reduced ejection fraction",
+      "type": "condition",
+      "clinical_entity": "cond.hfref",
+      "concept": "Heart failure with reduced ejection fraction",
+      "value_domain": "Boolean",
+      "binding_status": "candidate"
+    },
+    {
+      "id": "meas.egfr",
+      "name": "Estimated glomerular filtration rate",
+      "type": "measurement",
+      "clinical_entity": "meas.egfr",
+      "concept": "eGFR",
+      "value_domain": "Quantity",
+      "unit": "mL/min/1.73m2",
+      "binding_status": "candidate"
+    },
+    {
+      "id": "meas.potassium",
+      "name": "Serum potassium",
+      "type": "measurement",
+      "clinical_entity": "meas.potassium",
+      "concept": "Potassium",
+      "value_domain": "Quantity",
+      "unit": "mmol/L",
+      "binding_status": "candidate"
+    }
+  ],
+  "med_terms": [
+    {
+      "id": "med.class.sglt2i",
+      "name": "Sodium-glucose cotransporter-2 inhibitor",
+      "drug_class": "SGLT2 inhibitor",
+      "clinical_entity": "med.class.sglt2i",
+      "binding_status": "candidate"
+    }
+  ],
+  "predicates": [
+    {
+      "id": "pred.cond.hfref.exists",
+      "name": "HFrEF present",
+      "entity": "cond.hfref",
+      "entity_type": "condition",
+      "aspect": "existence",
+      "input_shape": "single",
+      "return_type": "Bool",
+      "final_output_type": "TruthValue",
+      "null_policy": "unknown",
+      "temporal_scope": "all_time",
+      "retrieve": {
+        "resource": "QuestionObservation",
+        "concepts": [
+          "cond.hfref"
+        ]
+      },
+      "extract": {
+        "path": "value",
+        "type": "TruthValue"
+      },
+      "reduction": {
+        "operator": "most_recent",
+        "output_type": "TruthValue"
+      },
+      "evidence": [
+        {
+          "source": "中国心力衰竭诊断和治疗指南2023"
+        }
+      ]
+    },
+    {
+      "id": "pred.meas.egfr.value.ge.30",
+      "name": "eGFR at least 30",
+      "entity": "meas.egfr",
+      "entity_type": "measurement",
+      "aspect": "quantity",
+      "input_shape": "single",
+      "return_type": "Bool",
+      "final_output_type": "TruthValue",
+      "null_policy": "unknown",
+      "temporal_scope": "all_time",
+      "retrieve": {
+        "resource": "QuestionObservation",
+        "concepts": [
+          "meas.egfr"
+        ]
+      },
+      "extract": {
+        "path": "value",
+        "type": "Quantity"
+      },
+      "reduction": {
+        "operator": "most_recent",
+        "output_type": "TruthValue"
+      },
+      "compare": {
+        "operator": "ge",
+        "value": 30,
+        "unit": "mL/min/1.73m2"
+      },
+      "unit": "mL/min/1.73m2"
+    },
+    {
+      "id": "pred.obs.sglt2i.tolerability",
+      "name": "Patient tolerates SGLT2 inhibitor therapy",
+      "entity": "med.class.sglt2i",
+      "entity_type": "clinical_assessment",
+      "aspect": "treatment_eligibility",
+      "input_shape": "single",
+      "return_type": "Bool",
+      "final_output_type": "TruthValue",
+      "null_policy": "unknown",
+      "temporal_scope": "all_time",
+      "description": "根据当前资料，患者整体是否能够耐受 SGLT2 抑制剂治疗？"
+    },
+    {
+      "id": "pred.meas.potassium.within_normal_range",
+      "name": "Serum potassium within normal range",
+      "entity": "meas.potassium",
+      "entity_type": "measurement",
+      "aspect": "quantity_range",
+      "input_shape": "single",
+      "return_type": "Bool",
+      "final_output_type": "TruthValue",
+      "null_policy": "unknown",
+      "temporal_scope": "all_time",
+      "unit": "mmol/L",
+      "compare": {
+        "operator": "within_normal_range",
+        "value": "normal",
+        "unit": "mmol/L"
+      }
+    },
+    {
+      "id": "pred.obs.sglt2i.dose_band",
+      "name": "SGLT2 inhibitor dose band",
+      "entity": "med.class.sglt2i",
+      "entity_type": "medication",
+      "aspect": "status",
+      "input_shape": "single",
+      "return_type": "Enum",
+      "final_output_type": "Enum",
+      "null_policy": "unknown",
+      "temporal_scope": "all_time"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule.sglt2i.hfref.recommend",
+      "label": "HFrEF 患者推荐 SGLT2i 治疗",
+      "source_text": "对于射血分数降低的心力衰竭患者，建议使用 SGLT2i 治疗，以降低心衰住院和心血管死亡风险。",
+      "boolean_root": "ROOT",
+      "missing_data_policy": "propagate_unknown",
+      "condition_dag": {
+        "nodes": [
+          {
+            "id": "pred.cond.hfref.exists",
+            "type": "predicate_ref",
+            "predicate_ref": "pred.cond.hfref.exists",
+            "return_type": "Bool"
+          },
+          {
+            "id": "pred.meas.egfr.value.ge.30",
+            "type": "predicate_ref",
+            "predicate_ref": "pred.meas.egfr.value.ge.30",
+            "return_type": "Bool"
+          },
+          {
+            "id": "N1",
+            "type": "combine",
+            "operator": "and",
+            "inputs": [
+              "pred.cond.hfref.exists",
+              "pred.meas.egfr.value.ge.30"
+            ],
+            "return_type": "Bool"
+          },
+          {
+            "id": "ROOT",
+            "type": "combine",
+            "operator": "and",
+            "inputs": [
+              "N1"
+            ],
+            "return_type": "Bool"
+          }
+        ],
+        "root": "ROOT"
+      },
+      "action": {
+        "subjects": [
+          "med.class.sglt2i"
+        ],
+        "permission": "recommend",
+        "intent": "initiate_or_continue",
+        "monitoring": [
+          "监测肾功能与容量状态"
+        ],
+        "output": {
+          "text": "启动或继续 SGLT2 抑制剂治疗"
+        }
+      }
+    },
+    {
+      "id": "rule.sglt2i.tolerability.consider",
+      "label": "确认耐受性后方可启动 SGLT2i",
+      "source_text": "启动 SGLT2 抑制剂前应评估患者整体耐受性。",
+      "boolean_root": "ROOT",
+      "missing_data_policy": "propagate_unknown",
+      "condition_dag": {
+        "nodes": [
+          {
+            "id": "pred.obs.sglt2i.tolerability",
+            "type": "predicate_ref",
+            "predicate_ref": "pred.obs.sglt2i.tolerability",
+            "return_type": "Bool"
+          },
+          {
+            "id": "ROOT",
+            "type": "combine",
+            "operator": "and",
+            "inputs": [
+              "pred.obs.sglt2i.tolerability"
+            ],
+            "return_type": "Bool"
+          }
+        ],
+        "root": "ROOT"
+      },
+      "action": {
+        "subjects": [
+          "med.class.sglt2i"
+        ],
+        "permission": "consider",
+        "intent": "initiate",
+        "output": {
+          "text": "在确认可耐受后考虑启动 SGLT2 抑制剂"
+        }
+      }
+    },
+    {
+      "id": "rule.sglt2i.dose_band.gate",
+      "label": "按剂量档位给药",
+      "boolean_root": "ROOT",
+      "missing_data_policy": "propagate_unknown",
+      "condition_dag": {
+        "nodes": [
+          {
+            "id": "pred.obs.sglt2i.dose_band",
+            "type": "predicate_ref",
+            "predicate_ref": "pred.obs.sglt2i.dose_band",
+            "return_type": "Enum"
+          },
+          {
+            "id": "ROOT",
+            "type": "predicate_ref",
+            "predicate_ref": "pred.obs.sglt2i.dose_band",
+            "return_type": "Enum"
+          }
+        ],
+        "root": "ROOT"
+      },
+      "action": {
+        "subjects": [
+          "med.class.sglt2i"
+        ],
+        "permission": "recommend",
+        "intent": "adjust_dose",
+        "output": {
+          "text": "依据剂量档位调整 SGLT2i"
+        }
+      }
+    }
+  ],
+  "contraindications": [],
+  "safety_constraints": [],
+  "missing_variables": {}
+}
